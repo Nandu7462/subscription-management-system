@@ -31,7 +31,7 @@ def from_template(data: FromTemplate, db: Session = Depends(get_db, scope="funct
 @router.get("")
 def listing(status: str | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=100),
             db: Session = Depends(get_db, scope="function"), actor=Depends(current_user)):
-    stmt = select(Subscription).order_by(Subscription.created_at, Subscription.id)
+    stmt = select(Subscription).order_by(Subscription.created_at.desc(), Subscription.id)
     if actor.role == "customer":
         stmt = stmt.where(Subscription.customer_id == customer_id(db, actor))
     if status:

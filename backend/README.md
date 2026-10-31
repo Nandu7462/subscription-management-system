@@ -108,3 +108,9 @@ The authentication limiter is an in-process development guard (20 requests per I
 Implementation references: [FastAPI JWT/Argon2 guide](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/), [FastAPI dependency transaction cleanup](https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/), [SQLAlchemy sessions](https://docs.sqlalchemy.org/en/20/orm/session_basics.html), and [SQLAlchemy row locking](https://docs.sqlalchemy.org/en/20/core/selectable.html).
 
 Database migrations, PostgreSQL schema export, Docker configuration and local data are organized in [`../database`](../database/README.md). Alembic commands still run from `backend`.
+
+## Connected frontend
+
+The React application in `../frontend` uses `/api/v1` with bearer authentication. Run `npm run dev` from the project root to start the database, migrations, backend and frontend together. Vite proxies API requests from port 5173 to port 8000. Build the frontend with `npm run build` from the root to serve it directly through FastAPI at port 8000; the frontend and API then share an origin. The `/reset-password` page is included in the frontend fallback, while unknown `/api` routes keep their JSON 404 responses. Set `FRONTEND_URL` to the origin users will open when sending reset links.
+
+Run `npm run check:stack` from the project root to verify the actual JavaScript client, Vite proxy, API and database together using a disposable PostgreSQL schema. See the root README for details.

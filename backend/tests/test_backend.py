@@ -355,3 +355,18 @@ def test_reset_delivery_failure_does_not_reveal_account(env, monkeypatch):
     known = request_ok(client, "POST", "/auth/forgot-password", {}, {"email": "customer@example.com"})
     missing = request_ok(client, "POST", "/auth/forgot-password", {}, {"email": "missing@example.com"})
     assert known == missing
+
+
+def test_recent_lists_use_creation_order_for_the_same_billing_period(env):
+    client, factory, headers, _ = env
+    first, _, _ = subscription(env)
+    second, _, _ = subscription(env)
+    activate(env, first)
+    activate(env, second)
+    with factory.begin() as db:
+        db.get(Subscription, first["id"]).created_at = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        db.get(Subscription, second["id"]).created_at = datetime(2026, 1, 2, tzinfo=timezone.utc)
+        for invoice in db.scalars(select(Invoice)):
+            invoice.created_at = datetime(2026, 1, 1 if invoice.subscription_id == first["id"] else 2, tzinfo=timezone.utc)
+    assert request_ok(client, "GET", "/subscriptions", headers["admin"])["items"][0]["id"] == second["id"]
+    assert request_ok(client, "GET", "/invoices", headers["admin"])["items"][0]["subscription_id"] == second["id"]

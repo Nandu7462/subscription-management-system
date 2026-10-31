@@ -16,7 +16,7 @@ router = APIRouter(tags=["Invoices"])
 @router.get("/invoices")
 def listing(status: str | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=100),
             db: Session = Depends(get_db, scope="function"), actor=Depends(current_user)):
-    stmt = select(Invoice).order_by(Invoice.billing_period.desc(), Invoice.id)
+    stmt = select(Invoice).order_by(Invoice.billing_period.desc(), Invoice.created_at.desc(), Invoice.id)
     if actor.role == "customer":
         stmt = stmt.where(Invoice.customer_id == customer_id(db, actor), Invoice.status != "draft")
     if status:
