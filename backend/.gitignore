@@ -1,0 +1,11 @@
+# Backend local configuration and generated artifacts
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp*/
+.mail/
+*.log
