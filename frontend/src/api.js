@@ -17,6 +17,13 @@ export function errorMessage(detail) {
   return 'The request could not be completed.'
 }
 
+function responseError(status) {
+  if (status === 404) return 'The sign-in/API connection is missing. Stop the frontend server and run npm run dev from the project root.'
+  if ([502, 503, 504].includes(status)) return 'Cannot reach the backend. Run npm run dev from the project root and wait for the API to be ready.'
+  if (status >= 500) return 'The server could not complete the request. Check the backend terminal for details.'
+  return 'The request could not be completed.'
+}
+
 export function createClient({ baseURL = import.meta.env?.VITE_API_URL || '/api/v1',
   storage = globalThis.sessionStorage, fetcher = globalThis.fetch, onUnauthorized = () => {} } = {}) {
   let token = storage?.getItem(TOKEN_KEY) || null
@@ -47,11 +54,12 @@ export function createClient({ baseURL = import.meta.env?.VITE_API_URL || '/api/
         setToken(null)
         onUnauthorized()
       }
-      throw new ApiError(errorMessage(data.detail), response.status)
+      throw new ApiError(data.detail ? errorMessage(data.detail) : responseError(response.status), response.status)
     }
     if (blob) return response.blob()
     if (response.status === 204) return null
-    return response.json()
+    try { return await response.json() }
+    catch { throw new ApiError('The API returned an invalid response. Restart the app with npm run dev from the project root to restore the frontend/backend connection.', response.status) }
   }
   return {
     request, setToken,

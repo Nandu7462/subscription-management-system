@@ -69,3 +69,23 @@ test('PDF downloads use the authenticated request and return a blob', async () =
   const pdf = await api.request('/invoices/id/pdf', { blob: true })
   assert.equal(await pdf.text(), '%PDF-1.4')
 })
+
+test('a frontend 404 on login explains how to restore the missing API proxy', async () => {
+  const api = createClient({ storage: storage(), fetcher: async () => new Response('', { status: 404 }) })
+  await assert.rejects(api.login('test@example.com', 'Password!9'), error => error.status === 404 && /connection is missing.*npm run dev/.test(error.message))
+})
+
+test('an HTML page returned in place of API JSON explains the connection issue', async () => {
+  const api = createClient({ storage: storage(), fetcher: async () => new Response('<html>Frontend</html>', { status: 200 }) })
+  await assert.rejects(api.request('/health/ready'), /invalid response.*frontend\/backend connection/)
+})
+
+test('a proxy gateway failure explains that the backend is unavailable', async () => {
+  const api = createClient({ storage: storage(), fetcher: async () => new Response('', { status: 502 }) })
+  await assert.rejects(api.request('/auth/me'), /Cannot reach the backend/)
+})
+
+test('a real API not-found response preserves its resource error', async () => {
+  const api = createClient({ storage: storage(), fetcher: async () => json({ detail: 'Invoice not found' }, 404) })
+  await assert.rejects(api.request('/invoices/missing'), error => error.message === 'Invoice not found')
+})

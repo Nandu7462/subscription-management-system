@@ -2,6 +2,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { apiReady } from './health.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const backend = path.join(root, 'backend')
@@ -50,6 +51,9 @@ try {
   if (apiRunning) console.log('Reusing the backend already running on port 8000.')
   else start(python, ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', '8000'], backend)
   await waitForService('http://127.0.0.1:8000/api/v1/health/ready', text => text.includes('ready'))
+  if (uiRunning && !await apiReady('http://127.0.0.1:5173/api/v1/health/ready')) {
+    throw new Error('The existing frontend on port 5173 is not connected to this backend. Stop that frontend server (Ctrl+C in its terminal), then run npm run dev again from the project root.')
+  }
   if (uiRunning) console.log('Reusing the frontend already running on port 5173.')
   else {
     const vite = path.join(frontend, 'node_modules/vite/bin/vite.js')
@@ -57,6 +61,9 @@ try {
     start(process.execPath, [vite, '--host', '127.0.0.1'], frontend)
   }
   await waitForService('http://127.0.0.1:5173/', text => text.includes('Brightloop'))
+  if (!await apiReady('http://127.0.0.1:5173/api/v1/health/ready')) {
+    throw new Error('The frontend API proxy did not become ready. Check frontend/vite.config.js and API_PROXY_TARGET in frontend/.env.')
+  }
   console.log('\nFrontend: http://127.0.0.1:5173\nAPI docs: http://127.0.0.1:8000/docs\nDatabase: configured in backend/.env\n')
   process.on('SIGINT', () => shutdown())
   process.on('SIGTERM', () => shutdown())
