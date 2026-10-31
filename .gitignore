@@ -147,3 +147,20 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+# PostgreSQL private data
+database/.local-postgres/
+database/subscriptions.db
+
+# Environment variables and passwords
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python cache
+**/__pycache__/
+*.pyc
+
+# Logs
+*.log
