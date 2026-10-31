@@ -64,13 +64,6 @@ If you already have the project and its dependencies installed, run only `npm ru
 
 The launcher applies database migrations and starts the frontend and backend. On a fresh setup without `backend/.env`, it uses installed PostgreSQL binaries to initialize a separate development database and generates local credentials. It reuses existing Brightloop servers on the expected ports.
 
-| Service | Address |
-| --- | --- |
-| Application | [http://127.0.0.1:5173](http://127.0.0.1:5173) |
-| Interactive API documentation | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) |
-| Local development PostgreSQL | `127.0.0.1:55432` |
-
-For an existing database or Docker, configure `backend/.env` before starting. See the [database setup guide](database/README.md). Local PostgreSQL data is kept in `database/.local-postgres/` and excluded from Git.
 
 ### Create your administrator
 
